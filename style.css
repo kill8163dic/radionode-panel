@@ -240,3 +240,15 @@ body {
 .list-container tr:last-child td {
     border-bottom: none;
 }
+
+/* ... (기존 스타일) ... */
+
+/* (★신규★) 장치 목록 팝업 내의 '이 장치 보기' 링크 스타일 */
+.panel-link {
+    color: #60A5FA;
+    text-decoration: none;
+    font-weight: bold;
+}
+.panel-link:hover {
+    text-decoration: underline;
+}

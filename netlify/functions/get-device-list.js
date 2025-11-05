@@ -1,33 +1,44 @@
-const fetch = require('node-fetch');
+// netlify/functions/get-device-list.js
+
+// (★주의★) 
+// 이 파일은 get-data.js와 동일한 ALL_DEVICE_SETTINGS 목록을 가져야 합니다.
+// 두 파일의 목록이 다르면 혼란이 생깁니다.
+// (나중에 이 코드를 하나로 합치는 리팩토링이 필요합니다.)
+
+const ALL_DEVICE_SETTINGS = {
+    "1": { // id: 1
+        name: "울산대학교병원 1호기",
+        mac: "608A108370B0",
+        channel: "ch1"
+    },
+    "2": { // id: 2
+        name: "울산대학교병원 2호기",
+        mac: "608A108370B0",
+        channel: "ch1"
+    },
+    "3": { // id: 3 (예시 장치)
+        name: "DIC Water 3호기",
+        mac: "ABC123456789",
+        channel: "ch1"
+    }
+};
 
 exports.handler = async (event, context) => {
-
-    // 1. Netlify 비밀 변수 로드
-    const { API_KEY, API_SECRET } = process.env;
-
-    // 2. Radionode API 호출
-    const API_URL = 'https://oa.tapaculo365.com/tp365/v1';
-    try {
-        const params = new URLSearchParams({
-            api_key: API_KEY,
-            api_secret: API_SECRET
-        });
-
-        // '계정의 장치 목록 조회' 엔드포인트
-        const response = await fetch(`${API_URL}/device/get_list?${params.toString()}`);
-        if (!response.ok) {
-            throw new Error('API 응답 실패');
-        }
-        const data = await response.json();
-
-        // 3. 성공! 장치 목록 (data.device_list)을 브라우저로 전송
+    
+    // 1. 설정 목록을 브라우저가 원하는 형태로 가공
+    // { "1": { name: ... } } -> [{ id: "1", name: "...", mac: "..." }]
+    const deviceList = Object.keys(ALL_DEVICE_SETTINGS).map(id => {
+        const device = ALL_DEVICE_SETTINGS[id];
         return {
-            statusCode: 200,
-            body: JSON.stringify(data.device_list) // API 응답의 'device_list' 배열을 그대로 전달
+            id: id,
+            name: device.name,
+            mac: device.mac
         };
+    });
 
-    } catch (error) {
-        console.error("장치 목록 API 호출 오류:", error);
-        return { statusCode: 500, body: JSON.stringify({ error: '장치 목록 로드 실패' }) };
-    }
+    // 2. 가공된 목록을 브라우저(script.js)로 전송
+    return {
+        statusCode: 200,
+        body: JSON.stringify(deviceList)
+    };
 };
