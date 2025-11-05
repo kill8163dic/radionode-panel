@@ -1,0 +1,8 @@
+{
+  "name": "dic-water-panel",
+  "version": "1.0.0",
+  "description": "Radionode Secure Panel",
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  }
+}

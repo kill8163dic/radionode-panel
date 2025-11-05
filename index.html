@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIC Water 모니터링 패널</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+</head>
+<body>
+
+    <header class="main-header">
+        <h1>DIC Water</h1>
+        <button class="header-btn" id="show-device-list-btn">
+            전체 장치 목록 
+        </button>
+    </header>
+
+    <main class="panel-container">
+        
+        <section class="device-panel" id="device-1">
+            <h2 id="device-1-name">1호기 로딩 중...</h2>
+            <div class="data-value" id="device-1-value">--.-</div>
+            <div class="data-unit">Mohm</div>
+            <footer class="panel-footer">
+                <span class="mac-address" id="device-1-mac">MAC: ...</span>
+                <button class="chart-btn" data-device-id="1">2주 차트</button>
+            </footer>
+        </section>
+
+        <section class="device-panel" id="device-2">
+            <h2 id="device-2-name">2호기 로딩 중...</h2>
+            <div class="data-value" id="device-2-value">--.-</div>
+            <div class="data-unit">Mohm</div>
+            <footer class="panel-footer">
+                <span class="mac-address" id="device-2-mac">MAC: ...</span>
+                <button class="chart-btn" data-device-id="2">2주 차트</button>
+            </footer>
+        </section>
+
+    </main>
+
+    <div class="status-bar" id="status-bar">
+        서버와 연결 중...
+    </div>
+
+    <div class="modal-backdrop" id="device-list-modal">
+        <div class="modal-content">
+            <button class="close-btn" id="close-list-btn">×</button>
+            <h2>계정 장치 목록</h2>
+            <div class="list-container" id="device-list-container">
+                <p>목록을 불러오는 중...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="chart-modal">
+        <div class="modal-content chart-modal-content">
+            <button class="close-btn" id="close-chart-btn">×</button>
+            <canvas id="device-chart"></canvas>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
