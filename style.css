@@ -252,3 +252,66 @@ body {
 .panel-link:hover {
     text-decoration: underline;
 }
+
+/* ======== (추가된 스타일) ======== */
+
+/* 2. 장치 목록 (체크박스) 스타일 */
+.list-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #555;
+    background-color: #222;
+    padding: 15px;
+    margin-top: 15px;
+    text-align: left;
+}
+.list-container label {
+    display: block; /* 한 줄에 하나씩 */
+    padding: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+.list-container label:hover {
+    background-color: #444;
+}
+.list-container input[type="checkbox"] {
+    margin-right: 10px;
+    transform: scale(1.2); /* 체크박스 크기 키우기 */
+}
+
+/* 3. URL 생성 버튼 */
+.generate-btn {
+    background-color: #28a745; /* 녹색 */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 12px 20px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    margin-top: 20px;
+    width: 100%;
+}
+.generate-btn:hover {
+    background-color: #218838;
+}
+
+/* 4. 생성된 URL 표시 영역 */
+.url-output-area {
+    margin-top: 20px;
+}
+.url-output-area p {
+    font-size: 0.9rem;
+    color: #CCC;
+    text-align: left;
+    margin-bottom: 5px;
+}
+.url-output-area input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    background-color: #111;
+    color: #FFF;
+    border: 1px solid #555;
+    border-radius: 4px;
+    box-sizing: border-box; /* 패딩 포함 크기 계산 */
+}

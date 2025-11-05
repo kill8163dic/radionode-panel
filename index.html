@@ -13,23 +13,12 @@
     <header class="main-header">
         <h1>DIC Water</h1>
         <button class="header-btn" id="show-device-list-btn">
-            장치 목록 (선택)
+            대시보드 만들기
         </button>
     </header>
 
-    <main class="panel-container">
-        
-        <section class="device-panel" id="main-device-panel">
-            <h2 id="device-name">장치 로딩 중...</h2>
-            <div class="data-value" id="device-value">--.-</div>
-            <div class="data-unit">Mohm</div>
-            <footer class="panel-footer">
-                <span class="mac-address" id="device-mac">MAC: ...</span>
-                <button class="chart-btn" id="main-chart-btn">2주 차트</button>
-            </footer>
-        </section>
-
-    </main>
+    <main class="panel-container" id="panel-container">
+        </main>
 
     <div class="status-bar" id="status-bar">
         서버와 연결 중...
@@ -38,9 +27,20 @@
     <div class="modal-backdrop" id="device-list-modal">
         <div class="modal-content">
             <button class="close-btn" id="close-list-btn">×</button>
-            <h2>장치 선택</h2>
+            <h2>대시보드 편집기</h2>
+            <p>패널에 표시할 장치를 모두 선택하세요.</p>
+            
             <div class="list-container" id="device-list-container">
                 <p>목록을 불러오는 중...</p>
+            </div>
+            
+            <button class="generate-btn" id="generate-dashboard-btn">
+                선택 완료 (URL 생성)
+            </button>
+            
+            <div class="url-output-area" id="url-output-area" style="display:none;">
+                <p>생성된 URL을 복사하여 사용하세요:</p>
+                <input type="text" id="generated-url" readonly>
             </div>
         </div>
     </div>

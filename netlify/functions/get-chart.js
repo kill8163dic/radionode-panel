@@ -1,3 +1,5 @@
+// netlify/functions/get-chart.js
+
 const fetch = require('node-fetch');
 
 exports.handler = async (event, context) => {
@@ -5,61 +7,48 @@ exports.handler = async (event, context) => {
     // 1. Netlify 비밀 변수 로드
     const { API_KEY, API_SECRET } = process.env;
 
-    // 2. (사용자 설정) 모니터링할 장치 정보 (get-data.js와 동일하게)
-    const deviceSettings = {
-        "1": {
-            mac: "608A108370B0", // (필수 수정) 1호기 MAC
-            channel: "ch1" // (필수 수정) 1호기 채널
-        },
-        "2": {
-            mac: "608A108370B0", // (필수 수정) 2호기 MAC
-            channel: "ch1" // (필수 수정) 2호기 채널
-        }
-    };
-    
-    // 3. 어떤 장치의 차트를 요청했는지 확인
-    const deviceId = event.queryStringParameters.device; // "1" 또는 "2"
-    const device = deviceSettings[deviceId];
+    // 2. 어떤 장치의 차트를 요청했는지 MAC 주소로 확인
+    // 예: /api/get-chart?mac=MAC123...
+    const mac = event.queryStringParameters.mac;
+    // (★가정★) 차트도 'ch1' 값을 기준으로 함
+    const channel = "ch1"; 
 
-    if (!device) {
-        return { statusCode: 404, body: 'Device not found' };
+    if (!mac) {
+        return { statusCode: 400, body: 'mac 파라미터가 필요합니다.' };
     }
 
-    // 4. 2주 기간 계산 (14일 전 ~ 지금)
+    // 3. 2주 기간 계산
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(endDate.getDate() - 14);
 
-    // Radionode API가 요구하는 날짜 형식(YYYYMMDDHHmmSS)으로 변환
     const format = (d) => d.toISOString().replace(/[-:T.]/g, '').substring(0, 14);
     const sdate = format(startDate);
     const edate = format(endDate);
 
-    // 5. Radionode API 호출
+    // 4. Radionode API 호출
     const API_URL = 'https://oa.tapaculo365.com/tp365/v1';
     try {
         const params = new URLSearchParams({
             api_key: API_KEY,
             api_secret: API_SECRET,
-            MAC: device.mac,
-            ch: device.channel,
+            MAC: mac,
+            ch: channel,
             sdate: sdate,
             edate: edate
         });
 
-        // '채널 데이터 리스트 조회' 엔드포인트
         const response = await fetch(`${API_URL}/channel/get_data_list?${params.toString()}`);
+        if (!response.ok) throw new Error('API 응답 실패');
+        
         const data = await response.json();
 
-        // 6. 차트(Chart.js)가 이해하는 형식으로 데이터 가공
-        // API 응답이 { data_list: [ { date: "YYYY...SS", val: 18.1 }, ... ] } 형태라고 가정
+        // 5. 차트(Chart.js) 형식으로 가공
         const chartData = data.data_list.map(item => ({
-            // API의 날짜(YYYYMMDDHHMMSS)를 JavaScript가 읽을 수 있게 변환
             x: `${item.date.substring(0, 4)}-${item.date.substring(4, 6)}-${item.date.substring(6, 8)}T${item.date.substring(8, 10)}:${item.date.substring(10, 12)}:${item.date.substring(12, 14)}`,
             y: parseFloat(item.val)
         }));
 
-        // 7. 성공! 차트 데이터를 브라우저(script.js)로 전송
         return {
             statusCode: 200,
             body: JSON.stringify(chartData)

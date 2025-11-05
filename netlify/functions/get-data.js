@@ -2,80 +2,76 @@
 
 const fetch = require('node-fetch');
 
-exports.handler = async (event, context) => {
-    // 1. Netlify 비밀 변수 로드
-    const { API_KEY, API_SECRET } = process.env;
+// Radionode API의 기본 주소
+const API_URL = 'https://oa.tapaculo365.com/tp365/v1';
 
-    // 2. (★중요★) 계정에 등록된 모든 장치 정보를 여기에 입력합니다.
-    // 이 목록이 사용자가 선택할 수 있는 전체 장치 목록이 됩니다.
-    // 'id'는 URL에서 사용할 고유 식별자입니다 (예: 1, 2, "main_fab" 등)
-    const ALL_DEVICE_SETTINGS = {
-        "1": { // id: 1
-            name: "울산대학교병원 1호기",
-            mac: "608A108370B0", // (필수 수정) 1호기 MAC
-            channel: "ch1" // (필수 수정) 1호기 채널
-        },
-        "2": { // id: 2
-            name: "울산대학교병원 2호기",
-            mac: "608A108370B0", // (필수 수정) 2호기 MAC
-            channel: "ch1" // (필수 수정) 2호기 채널
-        },
-        "3": { // id: 3 (예시 장치)
-            name: "DIC Water 3호기",
-            mac: "ABC123456789", // (필수 수정) 3호기 MAC
-            channel: "ch1" // (필수 수정) 3호기 채널
-        }
-        // 필요한 만큼 장치를 계속 추가...
-    };
-
-    // 3. 사용자가 요청한 장치 ID 확인
-    // 예: /api/get-data?device=2 -> deviceId = "2"
-    // 만약 ?device=... 가 없으면 기본값 "1"을 사용
-    const deviceId = event.queryStringParameters.device || "1";
-    
-    // 4. 요청된 ID에 해당하는 장치 정보 찾기
-    const device = ALL_DEVICE_SETTINGS[deviceId];
-
-    if (!device) {
-        return { 
-            statusCode: 404, 
-            body: JSON.stringify({ error: '요청한 장치 ID를 찾을 수 없습니다.' }) 
-        };
-    }
-
-    // 5. Radionode API 호출
-    const API_URL = 'https://oa.tapaculo365.com/tp365/v1';
+// 단일 장치의 정보를 가져오는 헬퍼 함수
+async function getDeviceInfo(mac, apiKey, apiSecret) {
     try {
         const params = new URLSearchParams({
-            api_key: API_KEY,
-            api_secret: API_SECRET,
-            MAC: device.mac
+            api_key: apiKey,
+            api_secret: apiSecret,
+            MAC: mac
         });
         
         const response = await fetch(`${API_URL}/device/get_info?${params.toString()}`);
-        if (!response.ok) throw new Error('API 응답 실패');
+        if (!response.ok) return null; // 실패 시 null 반환
         
         const data = await response.json();
-        
-        // 6. 필요한 데이터 추출
-        const sensorData = data.channels.find(c => c.ch === device.channel);
+
+        // (★가정★) 'ch1' (첫 번째 채널)의 값을 비저항값으로 사용
+        const sensorData = data.channels.find(c => c.ch === 'ch1');
         const currentValue = sensorData ? sensorData.val : 'N/A';
 
-        // 7. 가공된 최종 데이터 전송
-        const responseData = {
-            id: deviceId,
-            deviceName: device.name,
-            currentValue: currentValue,
-            macAddress: device.mac
+        return {
+            name: data.name,
+            mac: data.mac,
+            currentValue: currentValue
         };
+        
+    } catch (error) {
+        console.error(`Error fetching data for ${mac}:`, error);
+        return null; // 에러 시 null 반환
+    }
+}
+
+// Netlify 함수 핸들러
+exports.handler = async (event, context) => {
+
+    // 1. Netlify 비밀 변수 로드
+    const { API_KEY, API_SECRET } = process.env;
+
+    // 2. 요청된 장치 MAC 목록 확인
+    // 예: /api/get-data?devices=MAC1,MAC2,MAC3
+    const devicesQuery = event.queryStringParameters.devices;
+
+    if (!devicesQuery) {
+        return { 
+            statusCode: 400, 
+            body: JSON.stringify({ error: 'devices 파라미터가 필요합니다.' }) 
+        };
+    }
+
+    const macAddresses = devicesQuery.split(','); // "MAC1,MAC2" -> ["MAC1", "MAC2"]
+
+    try {
+        // 3. 모든 장치의 정보를 '병렬'로 요청
+        const requests = macAddresses.map(mac => 
+            getDeviceInfo(mac, API_KEY, API_SECRET)
+        );
+        
+        const results = await Promise.all(requests);
+
+        // 4. null(실패한 요청)을 걸러내고, 성공한 데이터만 배열로 반환
+        const responseData = results.filter(data => data !== null);
 
         return {
             statusCode: 200,
-            body: JSON.stringify(responseData)
+            body: JSON.stringify(responseData) // [{ name: ... }, { name: ... }]
         };
 
     } catch (error) {
-        console.error("Radionode API 호출 오류:", error);
+        console.error("API 병렬 호출 오류:", error);
         return {
             statusCode: 500,
             body: JSON.stringify({ error: '서버 내부 오류 발생' })
